@@ -1,0 +1,53 @@
+@props(['name', 'class' => 'w-5 h-5'])
+
+@php
+    $paths = [
+        'gamepad' => '<path d="M6 12h4M8 10v4"/><path d="M12 13.5c-.5-2-2-3.5-4-3.5C5 10 3 11.5 3 14s2 4 4.5 4c1.5 0 2.7-.8 3.3-2h2.4c.6 1.2 1.8 2 3.3 2 2.5 0 4.5-1.5 4.5-4s-2-4-4.5-4c-2 0-3.5 1.5-4 3.5z"/><circle cx="17.5" cy="10" r="1"/><circle cx="19" cy="8" r="1"/>',
+        'home' => '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
+        'history' => '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
+        'user' => '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/>',
+        'search' => '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+        'shield' => '<path d="M12 3 4 6v6c0 4.4 3.4 8.4 8 9 4.6-.6 8-4.6 8-9V6l-8-3z"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/>',
+        'bolt' => '<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>',
+        'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        'check' => '<path d="m5 12 4.5 4.5L19 7.5"/>',
+        'x' => '<path d="M6 6l12 12M18 6 6 18"/>',
+        'chevron-down' => '<path d="m6 9 6 6 6-6"/>',
+        'chevron-left' => '<path d="m15 5-7 7 7 7"/>',
+        'chevron-right' => '<path d="m9 5 7 7-7 7"/>',
+        'arrow-right' => '<path d="M4 12h16m0 0-6-6m6 6-6 6"/>',
+        'plus' => '<path d="M12 5v14M5 12h14"/>',
+        'minus' => '<path d="M5 12h14"/>',
+        'wallet' => '<path d="M20 7H5a2 2 0 0 1 0-4h13v4"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1"/><circle cx="17" cy="14" r="1.2"/>',
+        'sync' => '<path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M3 20v-4h4M21 4v4h-4"/>',
+        'coin' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5c0-1 1.1-1.5 2.5-1.5s2.5.5 2.5 1.5-1.1 1.5-2.5 1.5-2.5.5-2.5 1.5 1.1 1.5 2.5 1.5 2.5-.5 2.5-1.5"/>',
+        'logout' => '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
+        'pencil' => '<path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="m13.5 6.5 3 3"/>',
+        'trash' => '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>',
+        'mail' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>',
+        'phone' => '<path d="M6 3h4l2 5-3 2c1 2 3 4 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2z"/>',
+        'lock' => '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+        'eye' => '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+        'info' => '<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>',
+        'alert' => '<path d="M10.3 3.8 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+        'check-circle' => '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/>',
+        'x-circle' => '<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>',
+        'layout' => '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>',
+        'tag' => '<path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+        'image' => '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
+        'settings' => '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>',
+        'box' => '<path d="M21 8 12 3 3 8v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+        'users' => '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M16 5.5a3.5 3.5 0 0 1 0 7M18.5 14.7c2 .8 3 2.3 3 5.3"/>',
+        'refresh' => '<path d="M20 11a8 8 0 0 0-14.9-3M4 13a8 8 0 0 0 14.9 3"/><path d="M20 4v4h-4M4 20v-4h4"/>',
+        'bag' => '<path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/>',
+        'copy' => '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+        'credit-card' => '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
+        'server' => '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 8h.01M7 17h.01"/>',
+        'dashboard' => '<rect x="3" y="3" width="8" height="11" rx="2"/><rect x="13" y="3" width="8" height="6" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/><rect x="3" y="16" width="8" height="5" rx="2"/>',
+        'grid' => '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+        'store' => '<path d="M4 9 5 4h14l1 5"/><path d="M4 9a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0"/><path d="M5 11.5V21h14v-9.5"/><path d="M9 21v-5h6v5"/>',
+    ];
+    $svg = $paths[$name] ?? $paths['info'];
+@endphp
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" {{ $attributes->merge(['class' => $class]) }}>{!! $svg !!}</svg>
