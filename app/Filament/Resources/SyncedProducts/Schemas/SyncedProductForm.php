@@ -24,10 +24,10 @@ class SyncedProductForm
                     ->searchable()
                     ->preload()
                     ->required(),
-                TextInput::make('digiflazz_sku')
+                TextInput::make('tokovoucher_sku')
                     ->required()
                     ->maxLength(255),
-                TextInput::make('digiflazz_price')
+                TextInput::make('tokovoucher_price')
                     ->required()
                     ->numeric()
                     ->prefix('Rp'),

@@ -229,7 +229,7 @@ class AdminLedgerCrudTest extends TestCase
             ->test(CreateAutoTopupLog::class)
             ->fillForm([
                 'order_id' => $order->id,
-                'provider' => 'digiflazz',
+                'provider' => 'tokovoucher',
                 'request_data' => ['sku' => 'ML-100'],
                 'response_data' => ['rc' => '00'],
                 'status' => 'success',

@@ -29,15 +29,17 @@
         </div>
 
         @if($products->count())
-            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-                @foreach($products as $product)
-                    <x-product-card :product="$product" />
-                @endforeach
-            </div>
+            <div data-paginate>
+                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                    @foreach($products as $product)
+                        <x-product-card :product="$product" />
+                    @endforeach
+                </div>
 
-            @if(method_exists($products, 'links'))
-                <div class="mt-8">{{ $products->links() }}</div>
-            @endif
+                @if(method_exists($products, 'links'))
+                    <div class="mt-8" data-paginate-nav>{{ $products->links() }}</div>
+                @endif
+            </div>
         @else
             <div class="card flex flex-col items-center px-6 py-16 text-center">
                 <span class="flex h-16 w-16 items-center justify-center rounded-2xl bg-stone-100 text-stone-400">

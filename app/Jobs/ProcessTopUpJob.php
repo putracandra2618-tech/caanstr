@@ -5,7 +5,7 @@ namespace App\Jobs;
 use App\Enums\OrderStatus;
 use App\Models\AutoTopupLog;
 use App\Models\Order;
-use App\Services\DigiflazzService;
+use App\Services\TokovoucherService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -25,7 +25,7 @@ class ProcessTopUpJob implements ShouldQueue
         public Order $order
     ) {}
 
-    public function handle(DigiflazzService $digiflazz): void
+    public function handle(TokovoucherService $tokovoucher): void
     {
         if ($this->order->status !== OrderStatus::Paid) {
             return;
@@ -34,13 +34,11 @@ class ProcessTopUpJob implements ShouldQueue
         $this->order->update(['status' => OrderStatus::Processing]);
 
         $customerNo = $this->order->game_id;
-        if ($this->order->game_zone) {
-            $customerNo .= '('.$this->order->game_zone.')';
-        }
+        $customerNo .= filled($this->order->game_zone) ? '|'.$this->order->game_zone : '';
 
         $log = AutoTopupLog::create([
             'order_id' => $this->order->id,
-            'provider' => 'digiflazz',
+            'provider' => 'tokovoucher',
             'request_data' => [
                 'sku' => $this->order->product->product_code,
                 'customer_no' => $customerNo,
@@ -51,9 +49,10 @@ class ProcessTopUpJob implements ShouldQueue
             'attempts' => 0,
         ]);
 
-        $result = $digiflazz->topUp(
+        $result = $tokovoucher->topUp(
             $this->order->product->product_code,
-            $customerNo,
+            $this->order->game_id,
+            $this->order->game_zone,
             $this->order->order_number
         );
 

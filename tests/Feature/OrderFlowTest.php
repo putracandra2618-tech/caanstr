@@ -131,8 +131,10 @@ class OrderFlowTest extends TestCase
         $product = $this->product();
 
         Http::fake([
-            'https://api.digiflazz.com/v1/transaction' => Http::response([
-                'data' => ['rc' => '00', 'status' => 'Sukses', 'message' => 'ok', 'sn' => 'SN-123'],
+            'https://api.tokovoucher.net/v1/transaksi' => Http::response([
+                'status' => 'sukses',
+                'message' => 'ok',
+                'sn' => 'SN-123',
             ]),
         ]);
 
@@ -184,7 +186,9 @@ class OrderFlowTest extends TestCase
             }
 
             return Http::response([
-                'data' => ['rc' => '00', 'status' => 'Sukses', 'message' => 'ok', 'sn' => 'SN-123'],
+                'status' => 'sukses',
+                'message' => 'ok',
+                'sn' => 'SN-123',
             ]);
         });
 
@@ -251,9 +255,76 @@ class OrderFlowTest extends TestCase
         $this->assertDatabaseMissing('transactions', ['order_id' => $order->id]);
     }
 
-    public function test_digiflazz_callback_completes_pending_order(): void
+    public function test_midtrans_callback_rejects_amount_mismatch(): void
     {
-        config()->set('digiflazz.webhook_secret', 'test-webhook-secret');
+        config()->set('services.midtrans.server_key', 'test-server-key');
+
+        $user = User::factory()->create();
+        $product = $this->product();
+        $order = Order::create([
+            'user_id' => $user->id,
+            'order_number' => 'ORD-20260901-0023',
+            'product_id' => $product->id,
+            'game_id' => '12345',
+            'quantity' => 1,
+            'subtotal' => 11000,
+            'admin_fee' => 0,
+            'discount' => 0,
+            'total' => 11000,
+            'status' => OrderStatus::Pending,
+        ]);
+
+        $payload = [
+            'order_id' => $order->order_number,
+            'transaction_status' => 'settlement',
+            'status_code' => '200',
+            'gross_amount' => '10000.00',
+            'signature_key' => hash('sha512', $order->order_number.'200'.'10000.00'.'test-server-key'),
+        ];
+
+        $this->post('/midtrans/callback', $payload)->assertStatus(422);
+
+        $this->assertSame(OrderStatus::Pending, $order->fresh()->status);
+        $this->assertDatabaseMissing('transactions', ['order_id' => $order->id]);
+    }
+
+    public function test_midtrans_callback_does_not_regress_completed_order(): void
+    {
+        config()->set('services.midtrans.server_key', 'test-server-key');
+
+        $user = User::factory()->create();
+        $product = $this->product();
+        $order = Order::create([
+            'user_id' => $user->id,
+            'order_number' => 'ORD-20260901-0024',
+            'product_id' => $product->id,
+            'game_id' => '12345',
+            'quantity' => 1,
+            'subtotal' => 11000,
+            'admin_fee' => 0,
+            'discount' => 0,
+            'total' => 11000,
+            'status' => OrderStatus::Completed,
+            'completed_at' => now(),
+        ]);
+
+        $payload = [
+            'order_id' => $order->order_number,
+            'transaction_status' => 'expire',
+            'status_code' => '407',
+            'gross_amount' => '11000.00',
+            'signature_key' => hash('sha512', $order->order_number.'407'.'11000.00'.'test-server-key'),
+        ];
+
+        $this->post('/midtrans/callback', $payload)->assertOk();
+
+        $this->assertSame(OrderStatus::Completed, $order->fresh()->status);
+    }
+
+    public function test_tokovoucher_callback_completes_pending_order(): void
+    {
+        config()->set('tokovoucher.member_code', 'MEMBER-TEST');
+        config()->set('tokovoucher.secret_key', 'test-secret-key');
 
         $user = User::factory()->create();
         $product = $this->product();
@@ -273,21 +344,21 @@ class OrderFlowTest extends TestCase
 
         AutoTopupLog::create([
             'order_id' => $order->id,
-            'provider' => 'digiflazz',
+            'provider' => 'tokovoucher',
             'request_data' => [],
             'status' => 'pending',
         ]);
 
         $body = json_encode([
             'ref_id' => $order->order_number,
-            'status' => 'Sukses',
+            'status' => 'sukses',
             'sn' => 'SN-999',
         ]);
 
-        $signature = 'sha1='.hash_hmac('sha1', $body, 'test-webhook-secret');
+        $signature = md5('MEMBER-TEST:test-secret-key:'.$order->order_number);
 
-        $this->call('POST', '/digiflazz/callback', [], [], [], [
-            'HTTP_X_HUB_SIGNATURE' => $signature,
+        $this->call('POST', '/tokovoucher/callback', [], [], [], [
+            'HTTP_X_TOKOVOUCHER_AUTHORIZATION' => $signature,
             'CONTENT_TYPE' => 'application/json',
             'HTTP_ACCEPT' => 'application/json',
         ], $body)->assertOk();
@@ -296,9 +367,10 @@ class OrderFlowTest extends TestCase
         $this->assertDatabaseHas('auto_topup_logs', ['order_id' => $order->id, 'status' => 'success']);
     }
 
-    public function test_digiflazz_callback_does_not_regress_completed_order(): void
+    public function test_tokovoucher_callback_does_not_regress_completed_order(): void
     {
-        config()->set('digiflazz.webhook_secret', 'test-webhook-secret');
+        config()->set('tokovoucher.member_code', 'MEMBER-TEST');
+        config()->set('tokovoucher.secret_key', 'test-secret-key');
 
         $user = User::factory()->create();
         $product = $this->product();
@@ -319,14 +391,14 @@ class OrderFlowTest extends TestCase
 
         $body = json_encode([
             'ref_id' => $order->order_number,
-            'status' => 'Gagal',
+            'status' => 'gagal',
             'message' => 'Late failure',
         ]);
 
-        $signature = 'sha1='.hash_hmac('sha1', $body, 'test-webhook-secret');
+        $signature = md5('MEMBER-TEST:test-secret-key:'.$order->order_number);
 
-        $this->call('POST', '/digiflazz/callback', [], [], [], [
-            'HTTP_X_HUB_SIGNATURE' => $signature,
+        $this->call('POST', '/tokovoucher/callback', [], [], [], [
+            'HTTP_X_TOKOVOUCHER_AUTHORIZATION' => $signature,
             'CONTENT_TYPE' => 'application/json',
             'HTTP_ACCEPT' => 'application/json',
         ], $body)->assertOk();
@@ -374,9 +446,10 @@ class OrderFlowTest extends TestCase
         $this->assertSame(OrderStatus::Pending, $fresh->fresh()->status);
     }
 
-    public function test_digiflazz_callback_rejects_forged_signature(): void
+    public function test_tokovoucher_callback_rejects_forged_signature(): void
     {
-        config()->set('digiflazz.webhook_secret', 'test-webhook-secret');
+        config()->set('tokovoucher.member_code', 'MEMBER-TEST');
+        config()->set('tokovoucher.secret_key', 'test-secret-key');
 
         $user = User::factory()->create();
         $product = $this->product();
@@ -394,12 +467,12 @@ class OrderFlowTest extends TestCase
             'status' => OrderStatus::Processing,
         ]);
 
-        $this->post('/digiflazz/callback', [
+        $this->post('/tokovoucher/callback', [
             'ref_id' => $order->order_number,
-            'status' => 'Sukses',
+            'status' => 'sukses',
             'sn' => 'SN-999',
         ], [
-            'X-Hub-Signature' => 'sha1=forged',
+            'X-TokoVoucher-Authorization' => 'forged-signature',
         ])->assertForbidden();
 
         $this->assertSame(OrderStatus::Processing, $order->fresh()->status);
@@ -437,8 +510,10 @@ class OrderFlowTest extends TestCase
                 'transaction_id' => 'TXN-SYNC-1',
                 'gross_amount' => '11000.00',
             ]),
-            'https://api.digiflazz.com/v1/transaction' => Http::response([
-                'data' => ['rc' => '00', 'status' => 'Sukses', 'message' => 'ok', 'sn' => 'SN-SYNC'],
+            'https://api.tokovoucher.net/v1/transaksi' => Http::response([
+                'status' => 'sukses',
+                'message' => 'ok',
+                'sn' => 'SN-SYNC',
             ]),
         ]);
 
@@ -631,5 +706,105 @@ class OrderFlowTest extends TestCase
 
         $this->assertSame(OrderStatus::Pending, $order->fresh()->status);
         Queue::assertNotPushed(ProcessTopUpJob::class);
+    }
+
+    public function test_full_flow_from_web_to_midtrans_to_tokovoucher_webhook(): void
+    {
+        config()->set('services.midtrans.server_key', 'test-server-key');
+        config()->set('tokovoucher.member_code', 'MEMBER-TEST');
+        config()->set('tokovoucher.secret_key', 'test-secret-key');
+
+        Http::preventStrayRequests();
+
+        $user = User::factory()->create();
+        $product = $this->product();
+
+        $tokovoucherBodies = [];
+        Http::fake(function ($request) use (&$tokovoucherBodies) {
+            if (str_contains($request->url(), 'app.sandbox.midtrans.com/snap/v1/transactions')) {
+                return Http::response(['token' => 'snap-token-flow']);
+            }
+
+            if (str_contains($request->url(), 'api.tokovoucher.net/v1/transaksi')) {
+                $tokovoucherBodies[] = $request->data();
+
+                return Http::response(['status' => 'pending', 'message' => 'processing']);
+            }
+
+            return Http::response('Unexpected request: '.$request->url(), 500);
+        });
+
+        $this->actingAs($user)->post('/order', [
+            'product_id' => $product->id,
+            'game_id' => '12345',
+            'game_zone' => '2233',
+            'quantity' => 1,
+        ])->assertRedirect();
+
+        $order = Order::first();
+        $this->assertNotNull($order);
+        $this->assertSame(OrderStatus::Pending, $order->fresh()->status);
+
+        $this->actingAs($user)->get("/order/{$order->order_number}/pay")
+            ->assertOk()
+            ->assertSee('snap-token-flow');
+
+        $this->post('/midtrans/callback', [
+            'order_id' => $order->order_number,
+            'transaction_status' => 'settlement',
+            'payment_type' => 'bank_transfer',
+            'fraud_status' => 'accept',
+            'transaction_id' => 'TXN-FLOW-1',
+            'status_code' => '200',
+            'gross_amount' => '11000.00',
+            'signature_key' => hash('sha512', $order->order_number.'200'.'11000.00'.'test-server-key'),
+        ])->assertOk();
+
+        $order->refresh();
+        $this->assertSame(OrderStatus::Processing, $order->status);
+        $this->assertSame('bank_transfer', $order->payment_method);
+        $this->assertNotNull($order->paid_at);
+        $this->assertDatabaseHas('transactions', ['order_id' => $order->id, 'status' => 'settlement', 'payment_type' => 'bank_transfer']);
+
+        $this->assertCount(1, $tokovoucherBodies);
+        $this->assertSame($product->product_code, $tokovoucherBodies[0]['produk']);
+        $this->assertSame('12345', $tokovoucherBodies[0]['tujuan']);
+        $this->assertSame('2233', $tokovoucherBodies[0]['server_id']);
+        $this->assertSame($order->order_number, $tokovoucherBodies[0]['ref_id']);
+        $this->assertSame('MEMBER-TEST', $tokovoucherBodies[0]['member_code']);
+        $this->assertSame(
+            md5('MEMBER-TEST:test-secret-key:'.$order->order_number),
+            $tokovoucherBodies[0]['signature']
+        );
+
+        $log = AutoTopupLog::where('order_id', $order->id)->first();
+        $this->assertSame('tokovoucher', $log->provider);
+        $this->assertSame('pending', $log->status);
+        $this->assertSame([
+            'sku' => $product->product_code,
+            'customer_no' => '12345|2233',
+            'zone' => '2233',
+            'ref_id' => $order->order_number,
+        ], $log->request_data);
+
+        $body = json_encode([
+            'ref_id' => $order->order_number,
+            'status' => 'sukses',
+            'sn' => 'SN-FLOW-1',
+        ]);
+
+        $signature = md5('MEMBER-TEST:test-secret-key:'.$order->order_number);
+
+        $this->call('POST', '/tokovoucher/callback', [], [], [], [
+            'HTTP_X_TOKOVOUCHER_AUTHORIZATION' => $signature,
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_ACCEPT' => 'application/json',
+        ], $body)->assertOk();
+
+        $order->refresh();
+        $this->assertSame(OrderStatus::Completed, $order->status);
+        $this->assertNotNull($order->completed_at);
+        $this->assertSame('success', $log->fresh()->status);
+        $this->assertSame('SN-FLOW-1', data_get($log->fresh()->response_data, 'sn'));
     }
 }

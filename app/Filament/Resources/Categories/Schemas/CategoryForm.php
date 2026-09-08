@@ -37,6 +37,10 @@ class CategoryForm
                     ->columnSpanFull(),
                 Toggle::make('is_active')
                     ->default(true),
+                Toggle::make('is_game')
+                    ->label('Kategori Game')
+                    ->helperText('Tampilkan di grid "Pilih Game" pada beranda.')
+                    ->default(false),
                 TextInput::make('sort_order')
                     ->numeric()
                     ->default(0),

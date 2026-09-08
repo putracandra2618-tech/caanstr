@@ -24,9 +24,9 @@ class SyncedProductsTable
                     ->searchable()
                     ->sortable()
                     ->toggleable(),
-                TextColumn::make('digiflazz_sku')
+                TextColumn::make('tokovoucher_sku')
                     ->searchable(),
-                TextColumn::make('digiflazz_price')
+                TextColumn::make('tokovoucher_price')
                     ->money('IDR')
                     ->sortable(),
                 TextColumn::make('brand')

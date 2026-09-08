@@ -16,8 +16,8 @@ class SyncedProductInfolist
                     ->label('Category'),
                 TextEntry::make('product.name')
                     ->label('Product'),
-                TextEntry::make('digiflazz_sku'),
-                TextEntry::make('digiflazz_price')
+                TextEntry::make('tokovoucher_sku'),
+                TextEntry::make('tokovoucher_price')
                     ->money(),
                 TextEntry::make('brand')
                     ->placeholder('-'),

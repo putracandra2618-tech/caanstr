@@ -1,16 +1,20 @@
 ---
 paths:
-  - app/Services/DigiflazzService.php
-  - app/Services/MidtransService.php
+  - app/Services/TokovoucherService.php
+  - 'app/Services/Tokovoucher*.php'
 ---
 
 # Services
 
-## DigiFlazz uses api.digiflazz.com only (no sandbox subdomain)
-DigiFlazz does not have an api-sandbox.digiflazz.com host — the host is always https://api.digiflazz.com/v1. Development/sandbox mode is toggled by (a) a dev- prefixed API key and (b) sending testing:true in the request body, NOT by changing the URL. Balance endpoint is POST /cek-saldo with cmd=deposit and sign md5(username+apiKey+"depo").
+## Tokovoucher base URL & auth
+Tokovoucher API lives at https://api.tokovoucher.net (also http://trx-ip.tokovoucher.net/ for IP-based flow — not used). Authentication uses Member Code + Secret Key from https://member.tokovoucher.net/pengaturan/secret-key. Signature formula: `md5(MEMBER_CODE:SECRET:REF_ID)` for transaction/status/webhook, and the default signature `md5(MEMBER_CODE:SECRET)` for member (balance) and product list endpoints. Whitelist Tokovoucher IP 188.166.243.56.
 
-## Callbacks Sandbox Wajib Set Payment Notification URL di Dashboard
-MIDTRANS_WEBHOOK_URL di .env TIDAK dipakai aplikasi; Midtrans hanya mengirim webhook ke Payment Notification URL yang didaftarkan di Dashboard (Settings > Configuration). Fallback: jalankan `orders:sync-midtrans` (terjadwal tiap 5 menit) yang membaca status dari api.sandbox.midtrans.com. API base URL configurable lewat `services.midtrans.api_url`; jangan hardcode sandbox.
+## Tokovoucher endpoints
+- Cek saldo: `GET /member?member_code&signature` → `data.saldo`
+- List produk full: `GET /member/produk/full` → nested `data.{category,operator,jenis,produk}`; `kode_produk` is the code used in transactions
+- Transaksi: `POST /v1/transaksi` with `ref_id, produk, tujuan, server_id, member_code, signature`. `server_id` is separate from `tujuan` (zone vs player id)
+- Status: `POST /v1/transaksi/status` with `ref_id, member_code, signature`
+- Status values are lowercase: `sukses` / `gagal` / `pending`. All HTTP errors must be treated as PENDING, wait for callback final.
 
-## Centralize Midtrans status sync in MidtransService::applyStatus
-Semua pembaruan status order dari Midtrans (webhook PaymentController::callback, orders:sync-midtrans, dan verifikasi di PaymentController::success) WAJIB lewat MidtransService::applyStatus. Jangan menulis ulang mapping status (settlement/capture/deny/dll) di tempat lain agar tidak kembar dan tetap idempotent (ProcessTopUpJob hanya di-dispatch saat baru jadi paid).
+## Callbacks authenticated via X-TokoVoucher-Authorization header
+Tokovoucher webhook sends header `X-TokoVoucher-Authorization` = `md5(MEMBER_CODE:SECRET:REF_ID)`. Validate it with the ref_id from the body using hash_equals. Unlike Midtrans/DigiFlazz there is no separate webhook secret — the header formula uses the same Member Code + Secret Key.

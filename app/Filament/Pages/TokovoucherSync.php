@@ -4,7 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Product;
 use App\Models\SyncedProduct;
-use App\Services\DigiflazzService;
+use App\Services\TokovoucherService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\Cache;
 use Throwable;
 use UnitEnum;
 
-class DigiflazzSync extends Page
+class TokovoucherSync extends Page
 {
-    protected string $view = 'filament.pages.digiflazz-sync';
+    protected string $view = 'filament.pages.tokovoucher-sync';
 
-    protected static ?string $title = 'Sinkronisasi DigiFlazz';
+    protected static ?string $title = 'Sinkronisasi Tokovoucher';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedServerStack;
 
@@ -50,8 +50,8 @@ class DigiflazzSync extends Page
                 ->icon(Heroicon::OutlinedArrowPath)
                 ->color('primary')
                 ->requiresConfirmation()
-                ->modalHeading('Sinkronisasi produk dari DigiFlazz?')
-                ->modalDescription('Proses ini akan membuat/memperbarui produk dan kategori dari price list DigiFlazz. Mungkin berlangsung beberapa menit.')
+                ->modalHeading('Sinkronisasi produk dari Tokovoucher?')
+                ->modalDescription('Proses ini akan membuat/memperbarui produk dan kategori dari price list Tokovoucher. Mungkin berlangsung beberapa menit.')
                 ->modalSubmitActionLabel('Ya, sync sekarang')
                 ->action(fn () => $this->syncProducts()),
         ];
@@ -60,9 +60,9 @@ class DigiflazzSync extends Page
     protected function syncProducts(): void
     {
         try {
-            $result = app(DigiflazzService::class)->syncProducts();
+            $result = app(TokovoucherService::class)->syncProducts();
 
-            Cache::forever('digiflazz_last_sync', now()->toDateTimeString());
+            Cache::forever('tokovoucher_last_sync', now()->toDateTimeString());
             $this->refreshStats();
 
             Notification::make()
@@ -81,11 +81,11 @@ class DigiflazzSync extends Page
 
     protected function checkBalance(): void
     {
-        $balance = app(DigiflazzService::class)->getBalance();
+        $balance = app(TokovoucherService::class)->getBalance();
 
         if ($balance === null) {
             Notification::make()
-                ->title('Gagal mengambil saldo DigiFlazz')
+                ->title('Gagal mengambil saldo Tokovoucher')
                 ->danger()
                 ->send();
 
@@ -93,7 +93,7 @@ class DigiflazzSync extends Page
         }
 
         Notification::make()
-            ->title('Saldo DigiFlazz')
+            ->title('Saldo Tokovoucher')
             ->body('Rp '.number_format($balance, 0, ',', '.'))
             ->success()
             ->send();
@@ -103,6 +103,6 @@ class DigiflazzSync extends Page
     {
         $this->totalProducts = Product::query()->count();
         $this->totalSynced = SyncedProduct::query()->count();
-        $this->lastSync = Cache::get('digiflazz_last_sync') ?? 'Belum pernah sinkron';
+        $this->lastSync = Cache::get('tokovoucher_last_sync') ?? 'Belum pernah sinkron';
     }
 }

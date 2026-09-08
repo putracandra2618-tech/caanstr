@@ -13,8 +13,8 @@ class SyncedProduct extends Model
     protected $fillable = [
         'category_id',
         'product_id',
-        'digiflazz_sku',
-        'digiflazz_price',
+        'tokovoucher_sku',
+        'tokovoucher_price',
         'brand',
         'type',
         'is_active',
@@ -24,7 +24,7 @@ class SyncedProduct extends Model
     protected function casts(): array
     {
         return [
-            'digiflazz_price' => 'decimal:2',
+            'tokovoucher_price' => 'decimal:2',
             'is_active' => 'boolean',
             'last_synced_at' => 'datetime',
         ];

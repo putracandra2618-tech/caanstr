@@ -35,4 +35,4 @@ Route::middleware('auth')->group(function () {
 
 Route::post('/midtrans/callback', [PaymentController::class, 'callback'])->name('midtrans.callback');
 Route::post('/api/midtrans/callback', [PaymentController::class, 'callback']);
-Route::post('/digiflazz/callback', [PaymentController::class, 'digiflazzCallback'])->name('digiflazz.callback');
+Route::post('/tokovoucher/callback', [PaymentController::class, 'tokovoucherCallback'])->name('tokovoucher.callback');

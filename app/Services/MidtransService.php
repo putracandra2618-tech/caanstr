@@ -7,6 +7,7 @@ use App\Jobs\ProcessTopUpJob;
 use App\Models\Order;
 use App\Models\Transaction;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -92,44 +93,50 @@ class MidtransService
 
     public function applyStatus(Order $order, array $payload): OrderStatus
     {
-        $transactionStatus = (string) ($payload['transaction_status'] ?? $payload['status_code'] ?? '');
-        $fraudStatus = (string) ($payload['fraud_status'] ?? '');
-        $orderId = (string) ($payload['order_id'] ?? $order->order_number);
+        [$status, $shouldDispatch] = DB::transaction(function () use ($order, $payload): array {
+            $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $transactionStatus = (string) ($payload['transaction_status'] ?? $payload['status_code'] ?? '');
+            $fraudStatus = (string) ($payload['fraud_status'] ?? '');
+            $midtransOrderId = (string) ($payload['order_id'] ?? $order->order_number);
 
-        $status = match (true) {
-            $transactionStatus === 'capture' && $fraudStatus === 'accept' => OrderStatus::Paid,
-            $transactionStatus === 'settlement' => OrderStatus::Paid,
-            $transactionStatus === 'pending' => OrderStatus::Pending,
-            in_array($transactionStatus, ['deny', 'expire', 'cancel'], true) => OrderStatus::Failed,
-            default => $order->status,
-        };
+            $status = match (true) {
+                $transactionStatus === 'capture' && $fraudStatus === 'accept' => OrderStatus::Paid,
+                $transactionStatus === 'settlement' => OrderStatus::Paid,
+                $transactionStatus === 'pending' => OrderStatus::Pending,
+                in_array($transactionStatus, ['deny', 'expire', 'cancel'], true) => OrderStatus::Failed,
+                default => $order->status,
+            };
 
-        $progressed = in_array($order->status, [OrderStatus::Processing, OrderStatus::Completed], true);
-        $alreadyPaid = $order->isPaid();
+            $progressed = in_array($order->status, [OrderStatus::Paid, OrderStatus::Processing, OrderStatus::Completed, OrderStatus::Refunded], true);
+            $canRegress = $progressed && in_array($status, [OrderStatus::Pending, OrderStatus::Failed], true);
+            $status = $progressed && ($canRegress || $status === OrderStatus::Paid) ? $order->status : $status;
+            $shouldDispatch = $order->getRawOriginal('status') === OrderStatus::Pending->value
+                && $status === OrderStatus::Paid;
 
-        if (! $progressed) {
             $order->update([
                 'status' => $status,
-                'payment_method' => $payload['payment_type'] ?? null,
-                'paid_at' => $status === OrderStatus::Paid ? ($order->paid_at ?? now()) : null,
+                'payment_method' => $payload['payment_type'] ?? $order->payment_method,
+                'paid_at' => $status === OrderStatus::Paid ? ($order->paid_at ?? now()) : $order->paid_at,
             ]);
-        }
 
-        Transaction::updateOrCreate(
-            ['order_id' => $order->id],
-            [
-                'midtrans_order_id' => $payload['transaction_id'] ?? $orderId,
-                'payment_type' => $payload['payment_type'] ?? null,
-                'status' => $transactionStatus,
-                'gross_amount' => $payload['gross_amount'] ?? $order->total,
-                'va_number' => $payload['va_number'] ?? $payload['va_numbers'][0]['va_number'] ?? null,
-                'fraud_status' => $fraudStatus ?: null,
-                'raw_response' => $payload,
-                'paid_at' => $status === OrderStatus::Paid ? ($order->paid_at ?? now()) : null,
-            ]
-        );
+            Transaction::updateOrCreate(
+                ['order_id' => $order->id],
+                [
+                    'midtrans_order_id' => $payload['transaction_id'] ?? $midtransOrderId,
+                    'payment_type' => $payload['payment_type'] ?? null,
+                    'status' => $transactionStatus,
+                    'gross_amount' => $payload['gross_amount'] ?? $order->total,
+                    'va_number' => data_get($payload, 'va_number', data_get($payload, 'va_numbers.0.va_number')),
+                    'fraud_status' => $fraudStatus ?: null,
+                    'raw_response' => $payload,
+                    'paid_at' => $status === OrderStatus::Paid ? ($order->paid_at ?? now()) : null,
+                ]
+            );
 
-        if ($status === OrderStatus::Paid && ! ($alreadyPaid || $progressed)) {
+            return [$status, $shouldDispatch];
+        });
+
+        if ($shouldDispatch) {
             ProcessTopUpJob::dispatch($order->fresh());
         }
 

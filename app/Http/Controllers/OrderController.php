@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
-use App\Models\Promo;
 use App\Models\Product;
+use App\Models\Promo;
 use App\Services\MidtransService;
 use Illuminate\Http\Request;
 
@@ -13,24 +13,26 @@ class OrderController extends Controller
 {
     public function store(Request $request)
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
 
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
+            'product_id' => 'required|exists:products,id,is_active,1',
             'game_id' => 'required|string|max:50',
             'game_zone' => 'nullable|string|max:20',
             'quantity' => 'required|integer|min:1|max:10',
             'promo_code' => 'nullable|string|exists:promos,code',
         ]);
 
-        $product = Product::findOrFail($validated['product_id']);
+        $product = Product::whereKey($validated['product_id'])
+            ->where('is_active', true)
+            ->firstOrFail();
         $subtotal = $product->price * $validated['quantity'];
         $adminFee = 0;
         $discount = 0;
 
-        if (!empty($validated['promo_code'])) {
+        if (! empty($validated['promo_code'])) {
             $promo = Promo::where('code', $validated['promo_code'])->first();
             if ($promo && $promo->isValid($subtotal)) {
                 $discount = $promo->calculateDiscount($subtotal);

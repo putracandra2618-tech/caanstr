@@ -1,10 +1,10 @@
 <x-filament-panels::page>
     <x-filament::section>
         <x-slot name="heading">
-            Sinkronisasi produk dari DigiFlazz
+            Sinkronisasi produk dari Tokovoucher
         </x-slot>
         <x-slot name="description">
-            Tarik price list DigiFlazz untuk dibuat atau diperbarui sebagai produk di toko.
+            Tarik price list Tokovoucher untuk dibuat atau diperbarui sebagai produk di toko.
         </x-slot>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">

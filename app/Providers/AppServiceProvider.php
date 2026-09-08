@@ -3,8 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Setting;
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
             if (filled($siteName)) {
                 config(['app.name' => $siteName]);
             }
+        }
+
+        if (str_starts_with(config('app.url'), 'https://')) {
+            app(UrlGenerator::class)->forceScheme('https');
         }
     }
 }

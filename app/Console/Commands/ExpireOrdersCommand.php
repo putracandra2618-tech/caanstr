@@ -24,12 +24,14 @@ class ExpireOrdersCommand extends Command
         $updated = 0;
 
         foreach ($expired as $order) {
-            $order->update([
-                'status' => OrderStatus::Failed,
-                'failed_reason' => 'Pembayaran tidak selesai dalam batas waktu.',
-            ]);
+            $updatedRows = Order::whereKey($order->id)
+                ->where('status', OrderStatus::Pending)
+                ->update([
+                    'status' => OrderStatus::Failed,
+                    'failed_reason' => 'Pembayaran tidak selesai dalam batas waktu.',
+                ]);
 
-            $updated++;
+            $updated += $updatedRows;
         }
 
         $this->info("Expired {$updated} pending order(s).");

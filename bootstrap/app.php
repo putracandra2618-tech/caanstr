@@ -16,8 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'midtrans/callback',
             'api/midtrans/callback',
-            'digiflazz/callback',
+            'tokovoucher/callback',
         ]);
+
+        $middleware->trustProxies(
+            at: array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', '')))),
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
@@ -27,4 +31,5 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('orders:expire-pending')->everyFiveMinutes();
         $schedule->command('orders:sync-midtrans')->everyFiveMinutes();
+        $schedule->command('queue:work --tries=3 --stop-when-empty')->everyMinute()->withoutOverlapping();
     })->create();

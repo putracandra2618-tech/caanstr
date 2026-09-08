@@ -22,6 +22,7 @@ class StorefrontFlowTest extends TestCase
             'name' => 'Mobile Legends',
             'slug' => 'mobile-legends',
             'is_active' => true,
+            'is_game' => true,
             'sort_order' => 1,
         ], $overrides));
     }
@@ -92,6 +93,59 @@ class StorefrontFlowTest extends TestCase
             ->assertSee('Diamonds 500')
             ->assertDontSee('Starlight Member')
             ->assertDontSee('Diamond FF');
+    }
+
+    public function test_home_filters_pick_game_grid_to_game_categories(): void
+    {
+        $this->category();
+        $this->product($this->category(['name' => 'Pulsa Telkomsel', 'slug' => 'pulsa-telkomsel', 'is_game' => false]), ['name' => 'Pulsa 10K', 'slug' => 'pulsa-10k']);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Mobile Legends')
+            ->assertDontSee('Pulsa Telkomsel')
+            ->assertDontSee('Pulsa 10K');
+    }
+
+    public function test_home_pick_game_grid_paginates_game_categories(): void
+    {
+        foreach (range(1, 26) as $index) {
+            $this->category([
+                'name' => "Game $index",
+                'slug' => "game-$index",
+            ]);
+        }
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Game 1')
+            ->assertDontSee('Game 25');
+
+        $this->get('/?page=2')
+            ->assertOk()
+            ->assertSee('Game 25')
+            ->assertSee('Game 26')
+            ->assertDontSee('Game 1');
+    }
+
+    public function test_category_page_paginates_products(): void
+    {
+        $category = $this->category();
+        foreach (range(1, 25) as $index) {
+            $this->product($category, [
+                'name' => "Product $index",
+                'slug' => "product-$index",
+            ]);
+        }
+
+        $this->get('/category/mobile-legends')
+            ->assertOk()
+            ->assertSee('Product 1')
+            ->assertDontSee('Product 25');
+
+        $this->get('/category/mobile-legends?page=2')
+            ->assertOk()
+            ->assertSee('Product 25');
     }
 
     public function test_product_detail_page_shows_price_and_related_products(): void

@@ -20,6 +20,9 @@ class CategoryInfolist
                 TextEntry::make('description')
                     ->placeholder('-')
                     ->columnSpanFull(),
+                IconEntry::make('is_game')
+                    ->label('Game')
+                    ->boolean(),
                 IconEntry::make('is_active')
                     ->boolean(),
                 TextEntry::make('sort_order')

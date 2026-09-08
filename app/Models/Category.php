@@ -16,6 +16,7 @@ class Category extends Model
         'image',
         'description',
         'is_active',
+        'is_game',
         'sort_order',
     ];
 
@@ -23,6 +24,7 @@ class Category extends Model
     {
         return [
             'is_active' => 'boolean',
+            'is_game' => 'boolean',
             'sort_order' => 'integer',
         ];
     }

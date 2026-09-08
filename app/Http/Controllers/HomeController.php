@@ -11,11 +11,13 @@ class HomeController extends Controller
     public function __invoke()
     {
         $categories = Category::where('is_active', true)
+            ->where('is_game', true)
             ->withCount('products')
             ->orderBy('sort_order')
-            ->get();
+            ->paginate(24);
 
         $popularProducts = Product::where('is_active', true)
+            ->whereHas('category', fn ($query) => $query->where('is_game', true))
             ->with('category')
             ->orderBy('sort_order')
             ->limit(8)

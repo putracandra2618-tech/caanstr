@@ -3,8 +3,71 @@ document.addEventListener('DOMContentLoaded', () => {
     initPasswordToggle();
     initReveal();
     initToasts();
+    initPagination();
     window.copyText = copyText;
 });
+
+function initPagination() {
+    const wraps = document.querySelectorAll('[data-paginate]');
+    if (!wraps.length) return;
+
+    wraps.forEach((wrap) => {
+        wrap.addEventListener('click', (event) => {
+            const nav = wrap.querySelector('[data-paginate-nav]');
+            if (!nav || !nav.contains(event.target)) return;
+
+            const link = event.target.closest('a[href]');
+            if (!link) return;
+
+            event.preventDefault();
+            loadPaginatePage(wrap, link.href);
+        });
+    });
+
+    window.addEventListener('popstate', () => {
+        const active = document.querySelector('[data-paginate]');
+        if (active) loadPaginatePage(active, window.location.href, true);
+    });
+}
+
+async function loadPaginatePage(wrap, url, replaceState = false) {
+    wrap.classList.add('paginate-loading');
+
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                Accept: 'text/html',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Pagination request failed');
+        }
+
+        const html = await response.text();
+        const fresh = new DOMParser()
+            .parseFromString(html, 'text/html')
+            .querySelector('[data-paginate]');
+
+        if (fresh) {
+            wrap.innerHTML = fresh.innerHTML;
+        }
+
+        if (replaceState) {
+            window.history.replaceState({}, '', url);
+        } else {
+            window.history.pushState({}, '', url);
+        }
+
+        initReveal();
+    } catch {
+        window.location.href = url;
+        return;
+    } finally {
+        wrap.classList.remove('paginate-loading');
+    }
+}
 
 function initQtyStepper() {
     document.querySelectorAll('[data-qty-stepper]').forEach((stepper) => {

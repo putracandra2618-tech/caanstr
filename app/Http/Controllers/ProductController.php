@@ -16,7 +16,8 @@ class ProductController extends Controller
         $products = Product::where('category_id', $category->id)
             ->where('is_active', true)
             ->orderBy('sort_order')
-            ->get();
+            ->with('category')
+            ->paginate(24);
 
         return view('pages.category', compact('category', 'products'));
     }

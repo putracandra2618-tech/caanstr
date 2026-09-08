@@ -102,22 +102,28 @@
                 <p class="section-subtitle">Pilih game favoritmu, langsung isi saldonya.</p>
             </div>
         </div>
-        <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8">
-            @foreach($categories as $category)
-                <a href="{{ route('category', $category->slug) }}"
-                   class="group flex flex-col items-center rounded-2xl border border-line bg-white p-4 pb-5 text-center transition hover:-translate-y-1 hover:border-forest-300 hover:shadow-soft">
-                    @if($category->image)
-                        <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}"
-                             class="h-14 w-14 rounded-xl object-cover ring-1 ring-stone-100">
-                    @else
-                        <span class="flex h-14 w-14 items-center justify-center rounded-xl bg-forest-100 text-forest-700 transition group-hover:bg-forest-700 group-hover:text-white">
-                            <x-icon name="gamepad" class="h-7 w-7" />
-                        </span>
-                    @endif
-                    <h3 class="mt-3 line-clamp-1 text-sm font-semibold text-ink">{{ $category->name }}</h3>
-                    <p class="mt-0.5 text-xs text-stone-400">{{ $category->products_count }} produk</p>
-                </a>
-            @endforeach
+        <div data-paginate>
+            <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8">
+                @foreach($categories as $category)
+                    <a href="{{ route('category', $category->slug) }}"
+                       class="group flex flex-col items-center rounded-2xl border border-line bg-white p-4 pb-5 text-center transition hover:-translate-y-1 hover:border-forest-300 hover:shadow-soft">
+                        @if($category->image)
+                            <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}"
+                                 class="h-14 w-14 rounded-xl object-cover ring-1 ring-stone-100">
+                        @else
+                            <span class="flex h-14 w-14 items-center justify-center rounded-xl bg-forest-100 text-forest-700 transition group-hover:bg-forest-700 group-hover:text-white">
+                                <x-icon name="gamepad" class="h-7 w-7" />
+                            </span>
+                        @endif
+                        <h3 class="mt-3 line-clamp-1 text-sm font-semibold text-ink">{{ $category->name }}</h3>
+                        <p class="mt-0.5 text-xs text-stone-400">{{ $category->products_count }} produk</p>
+                    </a>
+                @endforeach
+            </div>
+
+            @if(method_exists($categories, 'links') && $categories->hasPages())
+                <div class="mt-8" data-paginate-nav>{{ $categories->links() }}</div>
+            @endif
         </div>
     </section>
 

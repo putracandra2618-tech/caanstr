@@ -190,8 +190,8 @@ class AdminCatalogCrudTest extends TestCase
             ->fillForm([
                 'category_id' => $category->id,
                 'product_id' => $product->id,
-                'digiflazz_sku' => 'ML-100',
-                'digiflazz_price' => 10000,
+                'tokovoucher_sku' => 'ML-100',
+                'tokovoucher_price' => 10000,
                 'brand' => 'Mobile Legends',
                 'type' => 'game',
                 'is_active' => true,
@@ -199,16 +199,16 @@ class AdminCatalogCrudTest extends TestCase
             ->call('create')
             ->assertNotified();
 
-        $synced = SyncedProduct::where('digiflazz_sku', 'ML-100')->first();
+        $synced = SyncedProduct::where('tokovoucher_sku', 'ML-100')->first();
         $this->assertNotNull($synced);
 
         Livewire::actingAs($admin)
             ->test(EditSyncedProduct::class, ['record' => $synced->getKey()])
-            ->fillForm(['digiflazz_price' => 9500])
+            ->fillForm(['tokovoucher_price' => 9500])
             ->call('save')
             ->assertNotified();
 
-        $this->assertSame(9500.0, (float) $synced->fresh()->digiflazz_price);
+        $this->assertSame(9500.0, (float) $synced->fresh()->tokovoucher_price);
 
         Livewire::actingAs($admin)
             ->test(EditSyncedProduct::class, ['record' => $synced->getKey()])

@@ -15,8 +15,9 @@
         </div>
 
         @if($orders->count())
-            <div class="mt-6 grid gap-3 lg:grid-cols-2">
-                @foreach($orders as $order)
+            <div class="mt-6" data-paginate>
+                <div class="grid gap-3 lg:grid-cols-2">
+                    @foreach($orders as $order)
                     @php
                         $statusColors = [
                             'pending' => 'bg-amber-50 text-amber-700 ring-amber-200',
@@ -54,9 +55,10 @@
                 @endforeach
             </div>
 
-            @if(method_exists($orders, 'links'))
-                <div class="mt-8">{{ $orders->links() }}</div>
-            @endif
+                @if(method_exists($orders, 'links'))
+                    <div class="mt-8" data-paginate-nav>{{ $orders->links() }}</div>
+                @endif
+            </div>
         @else
             <div class="card mt-6 flex flex-col items-center px-6 py-16 text-center">
                 <span class="flex h-16 w-16 items-center justify-center rounded-2xl bg-stone-100 text-stone-400">

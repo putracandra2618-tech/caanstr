@@ -2,22 +2,23 @@
 
 namespace App\Console\Commands;
 
-use App\Services\DigiflazzService;
+use App\Services\TokovoucherService;
 use Illuminate\Console\Command;
 
-class DigiflazzSyncCommand extends Command
+class TokovoucherSyncCommand extends Command
 {
-    protected $signature = 'digiflazz:sync';
-    protected $description = 'Sync products from DigiFlazz API';
+    protected $signature = 'tokovoucher:sync';
 
-    public function handle(DigiflazzService $digiflazz): int
+    protected $description = 'Sync products from Tokovoucher API';
+
+    public function handle(TokovoucherService $tokovoucher): int
     {
-        $this->info('Syncing products from DigiFlazz...');
+        $this->info('Syncing products from Tokovoucher...');
 
         try {
-            $result = $digiflazz->syncProducts();
+            $result = $tokovoucher->syncProducts();
 
-            $this->info("Sync completed:");
+            $this->info('Sync completed:');
             $this->line("  Created: {$result['created']}");
             $this->line("  Updated: {$result['updated']}");
             $this->line("  Skipped: {$result['skipped']}");
@@ -25,6 +26,7 @@ class DigiflazzSyncCommand extends Command
             return Command::SUCCESS;
         } catch (\Exception $e) {
             $this->error("Sync failed: {$e->getMessage()}");
+
             return Command::FAILURE;
         }
     }

@@ -29,6 +29,10 @@ class CategoriesTable
                     ->label('Produk')
                     ->counts('products')
                     ->sortable(),
+                IconColumn::make('is_game')
+                    ->label('Game')
+                    ->boolean()
+                    ->sortable(),
                 IconColumn::make('is_active')
                     ->boolean(),
                 TextColumn::make('sort_order')
@@ -49,6 +53,11 @@ class CategoriesTable
                     ->options([
                         '1' => 'Aktif',
                         '0' => 'Nonaktif',
+                    ]),
+                SelectFilter::make('is_game')
+                    ->options([
+                        '1' => 'Game',
+                        '0' => 'Non Game',
                     ]),
             ])
             ->recordActions([
