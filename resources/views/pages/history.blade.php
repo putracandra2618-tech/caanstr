@@ -18,20 +18,6 @@
             <div class="mt-6" data-paginate>
                 <div class="grid gap-3 lg:grid-cols-2">
                     @foreach($orders as $order)
-                    @php
-                        $statusColors = [
-                            'pending' => 'bg-amber-50 text-amber-700 ring-amber-200',
-                            'paid' => 'bg-blue-50 text-blue-700 ring-blue-200',
-                            'processing' => 'bg-forest-50 text-forest-700 ring-forest-200',
-                            'completed' => 'bg-green-50 text-green-700 ring-green-200',
-                            'failed' => 'bg-red-50 text-red-600 ring-red-200',
-                            'refunded' => 'bg-stone-100 text-stone-500 ring-stone-200',
-                        ];
-                        $statusIcons = [
-                            'pending' => 'clock', 'paid' => 'wallet', 'processing' => 'sync',
-                            'completed' => 'check-circle', 'failed' => 'x-circle', 'refunded' => 'refresh',
-                        ];
-                    @endphp
                     <a href="{{ route('order.detail', $order->order_number) }}"
                        class="relative flex items-center justify-between gap-4 overflow-hidden rounded-2xl border border-line bg-white p-4 shadow-soft transition hover:-translate-y-0.5 hover:border-forest-300 hover:shadow-lift">
                         <div class="flex min-w-0 items-center gap-4">
@@ -46,9 +32,8 @@
                         </div>
                         <div class="shrink-0 text-right">
                             <p class="text-sm font-bold text-ink">Rp {{ number_format($order->total, 0, ',', '.') }}</p>
-                            <span class="badge mt-1.5 ring-1 {{ $statusColors[$order->status->value] ?? 'bg-stone-100 text-stone-500 ring-stone-200' }}">
-                                <x-icon name="{{ $statusIcons[$order->status->value] ?? 'info' }}" class="h-3.5 w-3.5" />
-                                {{ $order->status->label() }}
+                            <span class="mt-1.5 inline-block">
+                                <x-status-badge :status="$order->status" />
                             </span>
                         </div>
                     </a>

@@ -148,6 +148,21 @@
         transform: translateY(0);
     }
 
+    .account-menu-panel {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-6px);
+        transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+        pointer-events: none;
+    }
+
+    .account-menu-panel.is-open {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
     .paginate-loading {
         opacity: 0.55;
         pointer-events: none;

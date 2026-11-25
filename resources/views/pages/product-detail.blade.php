@@ -8,6 +8,10 @@
             <x-icon name="chevron-left" class="h-4 w-4" /> {{ $product->category->name }}
         </a>
 
+        <div class="card mt-4 p-6">
+            <x-checkout-steps :current="1" />
+        </div>
+
         <div class="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-12">
             {{-- Gambar --}}
             <div class="fade-in is-visible">

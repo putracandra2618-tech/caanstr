@@ -70,7 +70,7 @@ class PaymentController extends Controller
             return response()->json(['status' => 'order_not_found'], 404);
         }
 
-        if (! $this->midtransAmountMatches($order, $payload)) {
+        if (! $this->midtransAmountMatches($order, $payload, $midtrans)) {
             Log::warning('Midtrans callback amount mismatch', [
                 'order_id' => $orderId,
                 'expected' => $order->total,
@@ -174,7 +174,7 @@ class PaymentController extends Controller
         );
     }
 
-    protected function midtransAmountMatches(Order $order, array $payload): bool
+    protected function midtransAmountMatches(Order $order, array $payload, MidtransService $midtrans): bool
     {
         $grossAmount = $payload['gross_amount'] ?? null;
 
@@ -182,6 +182,6 @@ class PaymentController extends Controller
             return false;
         }
 
-        return number_format((float) $order->total, 2, '.', '') === number_format((float) $grossAmount, 2, '.', '');
+        return $midtrans->grossAmount($order) === (int) round((float) $grossAmount);
     }
 }

@@ -24,15 +24,16 @@
             {{-- Right actions --}}
             <div class="flex items-center gap-2">
             @auth
-                <div class="relative group hidden md:block">
-                    <button class="flex cursor-pointer items-center gap-2 rounded-full border border-stone-200 bg-white py-1.5 pl-1.5 pr-3 text-sm font-semibold text-stone-700 transition hover:border-stone-300 hover:shadow-soft">
+                <div class="relative hidden md:block" data-account-menu>
+                    <button type="button" data-account-menu-toggle aria-haspopup="true" aria-expanded="false"
+                            class="flex cursor-pointer items-center gap-2 rounded-full border border-stone-200 bg-white py-1.5 pl-1.5 pr-3 text-sm font-semibold text-stone-700 transition hover:border-stone-300 hover:shadow-soft">
                         <span class="flex h-7 w-7 items-center justify-center rounded-full bg-forest-100 text-forest-700">
                             <x-icon name="user" class="h-4 w-4" />
                         </span>
                         <span class="max-w-[8rem] truncate">{{ auth()->user()->name }}</span>
-                        <x-icon name="chevron-down" class="h-4 w-4 text-stone-400" />
+                        <x-icon name="chevron-down" data-account-menu-caret class="h-4 w-4 text-stone-400 transition" />
                     </button>
-                    <div class="absolute right-0 mt-2 w-48 overflow-hidden rounded-xl border border-stone-200 bg-white py-1 shadow-lift opacity-0 invisible group-hover:visible group-hover:opacity-100 transition">
+                    <div class="account-menu-panel absolute right-0 mt-2 w-48 overflow-hidden rounded-xl border border-stone-200 bg-white py-1 shadow-lift" data-account-menu-panel>
                         <a href="{{ route('profile') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50">
                             <x-icon name="user" class="h-4 w-4 text-stone-400" /> Profil
                         </a>

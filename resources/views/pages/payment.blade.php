@@ -3,7 +3,11 @@
 
 @section('content')
     <div class="container-site max-w-2xl py-8">
-        <h1 class="font-display text-2xl font-bold tracking-tight text-ink">Pembayaran</h1>
+        <div class="card p-6">
+            <x-checkout-steps :current="2" />
+        </div>
+
+        <h1 class="mt-8 font-display text-2xl font-bold tracking-tight text-ink">Pembayaran</h1>
         <p class="mt-1 text-sm text-stone-500">Selesaikan pembayaran dalam 5 menit untuk melanjutkan pesanan.</p>
 
         <div class="card mt-6 overflow-hidden">

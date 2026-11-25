@@ -3,8 +3,12 @@
 
 @section('content')
     <div class="container-site flex max-w-xl flex-col items-center py-14">
-        <span class="flex h-20 w-20 items-center justify-center rounded-full bg-stone-100 ring-1 ring-stone-200">
-            <x-icon name="check-circle" class="h-10 w-10 text-stone-500" />
+        <div class="card w-full p-6">
+            <x-checkout-steps :current="3" />
+        </div>
+
+        <span class="mt-8 flex h-20 w-20 items-center justify-center rounded-full bg-forest-50 ring-1 ring-forest-100">
+            <x-icon name="check-circle" class="h-10 w-10 text-forest-600" />
         </span>
         <h1 class="mt-6 font-display text-2xl font-bold tracking-tight text-ink">Pembayaran Diterima</h1>
         <p class="mt-2 text-center text-sm text-stone-500">

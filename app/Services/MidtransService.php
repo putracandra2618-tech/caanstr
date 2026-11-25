@@ -13,6 +13,11 @@ use RuntimeException;
 
 class MidtransService
 {
+    public function grossAmount(Order $order): int
+    {
+        return (int) round((float) $order->total);
+    }
+
     public function createSnapToken(Order $order): string
     {
         $serverKey = config('services.midtrans.server_key');
@@ -21,7 +26,7 @@ class MidtransService
             throw new RuntimeException('Konfigurasi Midtrans server key belum tersedia.');
         }
 
-        $grossAmount = (int) round((float) $order->total);
+        $grossAmount = $this->grossAmount($order);
 
         if ($grossAmount < 1) {
             throw new RuntimeException('Total pembayaran harus lebih besar dari Rp0.');

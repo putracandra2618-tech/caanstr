@@ -44,7 +44,7 @@ class SimulateMidtransSettlement extends Command
         };
         $transactionStatus = $transactionStatus === 'settlement' ? 'settlement' : $transactionStatus;
 
-        $grossAmount = number_format((float) $order->total, 2, '.', '');
+        $grossAmount = (string) $midtrans->grossAmount($order);
         $serverKey = (string) config('services.midtrans.server_key');
 
         $payload = [

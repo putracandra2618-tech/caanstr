@@ -3,7 +3,11 @@
 
 @section('content')
     <div class="container-site flex max-w-xl flex-col items-center py-14">
-        <span class="flex h-20 w-20 items-center justify-center rounded-full bg-red-50 ring-1 ring-red-200">
+        <div class="card w-full p-6">
+            <x-checkout-steps :current="3" />
+        </div>
+
+        <span class="mt-8 flex h-20 w-20 items-center justify-center rounded-full bg-red-50 ring-1 ring-red-200">
             <x-icon name="x-circle" class="h-10 w-10 text-red-500" />
         </span>
         <h1 class="mt-6 font-display text-2xl font-bold tracking-tight text-ink">Pembayaran Gagal</h1>
